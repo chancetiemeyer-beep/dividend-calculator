@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dividend Calculator</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#calculatorForm">Skip to calculator inputs</a>
+    <main class="app-shell">
+      <section class="masthead">
+        <div class="hero-copy">
+          <p class="eyebrow">Dividend Income Planner</p>
+          <h1>Estimate income from any dividend stock or ETF.</h1>
+          <p class="hero-text">Enter a ticker or use your own assumptions to see annual income, average monthly income, after-tax income, and future dividend projections.</p>
+        </div>
+        <div class="hero-actions" aria-label="Calculator status and sharing">
+          <div class="status-pill" id="apiStatus" aria-live="polite">Manual mode ready</div>
+          <button class="copy-link-button" id="copyUrlButton" type="button">Copy local URL</button>
+        </div>
+      </section>
+
+      <section class="ticker-band" aria-label="Ticker lookup">
+        <div class="ticker-search">
+          <label for="symbolInput">Ticker symbol</label>
+          <div class="search-row">
+            <input id="symbolInput" type="text" inputmode="latin" autocomplete="off" placeholder="KO, JNJ, SCHD, O" aria-describedby="tickerHelp">
+            <button id="loadTickerButton" type="button" title="Load ticker data">Load</button>
+          </div>
+          <p class="field-help" id="tickerHelp">Ticker lookup needs an Alpha Vantage key. Manual inputs work anytime.</p>
+        </div>
+        <div class="search-results" id="searchResults" aria-live="polite"></div>
+      </section>
+
+      <section class="workspace">
+        <form class="input-panel" id="calculatorForm">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Inputs</p>
+              <h2>Investment assumptions</h2>
+            </div>
+            <button class="ghost-button" id="resetManualButton" type="button">Clear API values</button>
+          </div>
+
+          <div class="field-grid">
+            <div class="field">
+              <label for="investmentAmount">Investment amount</label>
+              <input id="investmentAmount" name="investmentAmount" type="number" min="0" step="100" value="10000" inputmode="decimal" aria-describedby="investmentHelp">
+              <p class="field-help" id="investmentHelp">Total dollars you plan to invest.</p>
+            </div>
+            <div class="field">
+              <label for="sharePrice">Share price</label>
+              <input id="sharePrice" name="sharePrice" type="number" min="0" step="0.01" value="100" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label for="dividendPerShare">Dividend per payment</label>
+              <input id="dividendPerShare" name="dividendPerShare" type="number" min="0" step="0.0001" value="0.75" inputmode="decimal" aria-describedby="dividendHelp">
+              <p class="field-help" id="dividendHelp">Amount paid per share each dividend payment.</p>
+            </div>
+            <div class="field">
+              <label for="frequency">Dividend frequency</label>
+              <select id="frequency" name="frequency">
+                <option value="monthly">Monthly</option>
+                <option value="quarterly" selected>Quarterly</option>
+                <option value="semiannual">Semiannual</option>
+                <option value="annual">Annual</option>
+                <option value="irregular">Irregular</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="taxRate">Tax rate (%)</label>
+              <input id="taxRate" name="taxRate" type="number" min="0" max="100" step="0.1" value="15" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label for="fees">Brokerage or purchase fees</label>
+              <input id="fees" name="fees" type="number" min="0" step="0.01" value="0" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label for="dividendGrowthRate">Dividend growth (%)</label>
+              <input id="dividendGrowthRate" name="dividendGrowthRate" type="number" step="0.1" value="2" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label for="priceGrowthRate">Share price growth (%)</label>
+              <input id="priceGrowthRate" name="priceGrowthRate" type="number" step="0.1" value="3" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label for="recurringContribution">Monthly contribution</label>
+              <input id="recurringContribution" name="recurringContribution" type="number" min="0" step="25" value="0" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label for="projectionYears">Projection years</label>
+              <input id="projectionYears" name="projectionYears" type="number" min="1" max="50" step="1" value="10" inputmode="numeric">
+            </div>
+          </div>
+
+          <div class="toggle-row">
+            <label class="toggle" for="reinvestDividends">
+              <input id="reinvestDividends" name="reinvestDividends" type="checkbox" checked>
+              <span>Reinvest dividends after tax</span>
+            </label>
+            <label class="toggle" for="allowFractionalShares">
+              <input id="allowFractionalShares" name="allowFractionalShares" type="checkbox" checked>
+              <span>Allow fractional shares</span>
+            </label>
+          </div>
+        </form>
+
+        <section class="output-panel" aria-live="polite">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Results</p>
+              <h2 id="resultTitle">Manual estimate</h2>
+            </div>
+            <div class="quote-chip" id="quoteChip">No ticker loaded</div>
+          </div>
+
+          <div class="metric-grid">
+            <article class="metric">
+              <span>Annual income</span>
+              <strong id="annualIncome">$0</strong>
+            </article>
+            <article class="metric">
+              <span>Average monthly</span>
+              <strong id="monthlyIncome">$0</strong>
+            </article>
+            <article class="metric">
+              <span>After-tax annual</span>
+              <strong id="afterTaxIncome">$0</strong>
+            </article>
+            <article class="metric">
+              <span>Shares owned</span>
+              <strong id="sharesOwned">0</strong>
+            </article>
+            <article class="metric">
+              <span>Yield on cost</span>
+              <strong id="yieldOnCost">0%</strong>
+            </article>
+            <article class="metric">
+              <span>Current yield</span>
+              <strong id="currentYield">0%</strong>
+            </article>
+          </div>
+
+          <div class="chart-wrap">
+            <div class="chart-heading">
+              <span>Projected annual dividend income</span>
+              <strong id="finalProjection">$0</strong>
+            </div>
+            <canvas id="projectionChart" width="720" height="260" role="img" aria-label="Bar chart showing projected annual dividend income by year"></canvas>
+          </div>
+
+          <div class="tables">
+            <div>
+              <h3>Payout estimate</h3>
+              <div id="payoutSchedule" class="schedule-list"></div>
+            </div>
+            <div>
+              <h3>Projection table</h3>
+              <div id="projectionTable" class="projection-table"></div>
+            </div>
+          </div>
+
+          <p class="disclaimer">
+            Estimates use the latest available data and your assumptions. Dividend amounts, prices, taxes, and payout schedules can change.
+            This calculator is educational and is not financial advice.
+          </p>
+        </section>
+      </section>
+
+      <section class="share-panel" aria-label="Open in Safari">
+        <div>
+          <p class="eyebrow">Newsletter Link</p>
+          <h2>Use this local link for testing in Safari</h2>
+          <p class="share-note">This address works on your computer while the calculator server is running. For a real newsletter, host the app online and use the public website link.</p>
+        </div>
+        <div class="url-box">
+          <code id="localUrl">http://127.0.0.1:4173/</code>
+          <button id="copyUrlButtonBottom" type="button">Copy</button>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
