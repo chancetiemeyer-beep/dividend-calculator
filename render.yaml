@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: dividend-calculator
+    runtime: node
+    plan: free
+    buildCommand: ""
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: ALPHA_VANTAGE_API_KEY
+        sync: false
